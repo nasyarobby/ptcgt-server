@@ -36,6 +36,25 @@ export default class ApiClient {
   }
 
   /**
+   * @param {string} ptcgoCode
+   * @param {string|number} number
+   * @returns {Promise<import("./types").CardListResponse>}
+   */
+  async getCardByCodeAndNumber(ptcgoCode, number) {
+    const response = await this.client.get('/cards', {params: {q: `set.ptcgoCode:${ptcgoCode} number:${number}`}})
+    return response.data;
+  }
+
+  /**
+   * @param {string} id
+   * @returns {Promise<import("./types").CardListResponse>}
+   */
+  async getCardById(id) {
+    const response = await this.client.get(`/cards/${id}`)
+    return response.data;
+  }
+
+  /**
    * @param {string} url 
    * @param {string} path
    * @returns {Promise<any>}
