@@ -1,2 +1,4 @@
 node_modules/
 images/
+.wwebjs_auth/
+.wwebjs_cache/

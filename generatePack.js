@@ -46,7 +46,17 @@ export default async function generatePack(setName) {
    */
   function pickOneCard(rarities) {
     const rarity = randomWeightedInteger(rarities)
-    const cards = database.db.data.cards.filter(c => c.set.ptcgoCode === setName && c.rarity === rarity)
+    
+    const cards = database.db.data.cards.filter(c => {
+      if(setName === 'PAF') {
+        return c.set.id==='sv4pt5' && c.rarity === rarity
+      }
+      else {
+        return c.set.ptcgoCode === setName && c.rarity === rarity
+      }
+  })
+
+    console.log({cards})
 
     const cardId = randomWeightedInteger(cards.map(c => {
       return {
@@ -72,7 +82,7 @@ export default async function generatePack(setName) {
   }
 
   if(setName === 'PAF') {
-    const files = await [
+    const cards = [
       ...getCommonCards(4),
       ...getUncommonCards(3),
       pickOneCard([
@@ -126,15 +136,18 @@ export default async function generatePack(setName) {
           weight: 661
         }])
     ]
-      .reduce(async (prev, card) => {
-        console.log(`${card.name} - ${card.rarity} `+`(${card.number}/${card.set.printedTotal})`)
-        const accData = await prev;
-        const client = new ApiClient()
-        const filename=`./${card.id}.png`
-        await client.downloadImage(card.images.large, filename)
-        return [...accData, filename]
-      }, Promise.resolve([]))
+
+    const files = await cards.reduce(async (prev, card) => {
+      console.log(`${card.name} - ${card.rarity} `+`(${card.number}/${card.set.printedTotal})`)
+      const accData = await prev;
+      const client = new ApiClient()
+      const filename=`./${card.id}.png`
+      await client.downloadImage(card.images.large, filename)
+      return [...accData, filename]
+    }, Promise.resolve([]))
+
     await createPackResult(files)
+    return cards;
   }
 
 
@@ -215,5 +228,3 @@ export default async function generatePack(setName) {
     await createPackResult(files)
   }
 }
-
-generatePack('PRE')
