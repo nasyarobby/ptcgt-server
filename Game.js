@@ -124,5 +124,16 @@ import { setupDeck } from './Classes/setupDeck.js';
     number: 1
   })
 
+  try{
+
+    game.moveSpecificCardByCardId({
+      from: 'playerOneDeck',
+      id: '1',
+      toTop: 'playerOnePlayground'
+    })
+  }
+  catch(err) {
+    console.error(err)
+  }
   print()
 })()
