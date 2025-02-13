@@ -50,6 +50,14 @@ export class Area {
     this.cards = [...this.cards, ...cardsInput]
     return this;
   }
+
+  revealAll() {
+    this.cards.map(c => {
+      return {
+        ...c, visibleTo: 'ALL'
+      }
+    })
+  }
 }
 
 export class Player {
