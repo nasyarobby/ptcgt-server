@@ -8,7 +8,7 @@ export async function setupDeck(deckString) {
 
   const data = await lines.reduce(async (prev, line) => {
     const acc = await prev
-    const tokens = line.split(' ');
+    const tokens = line.split(' ').map(e => e.trim());
     const firstToken = tokens[0]
     const setNumber = tokens[tokens.length -1]
     const setPtcgoCode = tokens[tokens.length -2]

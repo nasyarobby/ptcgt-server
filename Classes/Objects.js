@@ -1,19 +1,18 @@
 export class Card {
-    constructor() {
-        /**
-         * @type {import(".").VisibilityType}
-         */
-        this.visibleTo = "NONE"
-    }
+  constructor() {
+    /**
+     * @type {import(".").VisibilityType}
+     */
+    this.visibleTo = 'NONE'
+  }
 }
 
 export class Area {
-    /**
-     * 
-     * @param {Player | null} owner 
-     * @param {string} areaName 
-     * @param {Card[]} cards 
-     */
+  /**
+   * @param {Player | null} owner 
+   * @param {string} areaName 
+   * @param {Card[]} cards 
+   */
   constructor(owner, areaName, cards) {
     this.owner = owner;
     this.name = areaName;
@@ -22,7 +21,7 @@ export class Area {
 }
 
 export class Player {
-  constructor(playerId, playerName, deckString) {
+  constructor(playerId, playerName, deck) {
     this.id = playerId;
     this.name = playerName;
     this.deck = deck;
@@ -30,11 +29,10 @@ export class Player {
 }
 
 export class Game {
-    /**
-     * 
-     * @param {Player} player1 
-     * @param {Player} player2 
-     */
+  /**
+   * @param {Player} player1 
+   * @param {Player} player2 
+   */
   constructor(player1, player2) {
     /** @type {Player} */
     this.player1 = player1
@@ -43,20 +41,20 @@ export class Game {
     this.player2 = player2
 
     this.area = {
-      playerOneHand: new Area(player1, "", []),
-      playerOneDeck: new Area(player1, "", this.player1.deck),
-      playerOneTrash: new Area(player1, "", []),
-      playerOneLostZone: new Area(player1, "", []),
-      playerOneArena: new Area(player1, "", []),
-      playerOnePlayground: new Area(player1, "", []]),
-      playerOnePrize: new Area(player1, "", []),
-      playerTwoHand: new Area(player2, "", []),
-      playerTwoDeck: new Area(player2, "", this.player2.deck),
-      playerTwoTrash: new Area(player2, "", []),
-      playerTwoLostZone: new Area(player2, "", []),
-      playerTwoArena: new Area(player2, "", []),
-      playerTwoPlayground: new Area(player2, "", []),
-      playerTwoPrize: new Area(player2, "", []),
+      playerOneHand: new Area(player1, '', []),
+      playerOneDeck: new Area(player1, '', this.player1.deck),
+      playerOneTrash: new Area(player1, '', []),
+      playerOneLostZone: new Area(player1, '', []),
+      playerOneArena: new Area(player1, '', []),
+      playerOnePlayground: new Area(player1, '', []),
+      playerOnePrize: new Area(player1, '', []),
+      playerTwoHand: new Area(player2, '', []),
+      playerTwoDeck: new Area(player2, '', this.player2.deck),
+      playerTwoTrash: new Area(player2, '', []),
+      playerTwoLostZone: new Area(player2, '', []),
+      playerTwoArena: new Area(player2, '', []),
+      playerTwoPlayground: new Area(player2, '', []),
+      playerTwoPrize: new Area(player2, '', []),
       stadium: new Area(),
     }
   }
