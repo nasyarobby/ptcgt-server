@@ -1,14 +1,15 @@
 import ApiClient from '../Api.js';
 
 /**
- * @param {string} deckString 
+ * @param {string} deckString
+ * @returns {Promise<import('../types.js').CardType[]>}
  */
 export async function setupDeck(deckString) {
-  const lines = str.split('\n').filter(e => e.trim() !== '');
+  const lines = deckString.split('\n').filter(e => e.trim() !== '');
 
   const data = await lines.reduce(async (prev, line) => {
     const acc = await prev
-    const tokens = line.split(' ').map(e => e.trim());
+    const tokens = line.split(' ').map(e => e.trim()).filter(e => !!e);
     const firstToken = tokens[0]
     const setNumber = tokens[tokens.length -1]
     const setPtcgoCode = tokens[tokens.length -2]
@@ -19,11 +20,13 @@ export async function setupDeck(deckString) {
       };
     }
 
+    console.log({
+      section: acc.section, line, setPtcgoCode, firstToken
+    })
+
     const setData = await new ApiClient().getSetByPtcgo(setPtcgoCode);
 
-    console.log(acc.section, line)
-
-    const cardData =  (acc.section === 'Energy') ? 
+    const cardData =  (acc.section === 'Energy' && setPtcgoCode === 'Energy') ? 
       await new ApiClient().getCardById(`sve-${setNumber}`) :
       await new ApiClient().getCardById(`${setData.data[0].id}-${setNumber}`) 
 
@@ -41,6 +44,7 @@ export async function setupDeck(deckString) {
   }, Promise.resolve({
     data: [], section: ''
   }))
+
   return data.data.reduce((acc, curr) => {
     const cards = []
 
@@ -52,28 +56,28 @@ export async function setupDeck(deckString) {
   }, [])
 }
 
-const str = `Pokemon - 10
-1 Latias ex SSP 76
-4 Roaring Moon TEF 109
-4 Roaring Moon ex PAR 124
-1 Squawkabilly ex PAL 169
-Trainer - 40
-4 Ancient Booster Energy Capsule TEF 140
-4 Arven SVI 166
-2 Boss’s Orders (Ghetsis) PAL 172
-4 Dark Patch ASR 139
-4 Earthen Vessel PAR 163
-4 Explorer's Guidance TEF 147
-4 Nest Ball SVI 181
-2 PokéStop PGO 68
-4 Professor Sada's Vitality PAR 170
-1 Scoop Up Cyclone TWM 162
-4 Trekking Shoes ASR 156
-3 Ultra Ball SVI 196
-Energy - 10
-10 Basic Darkness Energy 15
-`
+// const str = `Pokemon - 10
+// 1 Latias ex SSP 76
+// 4 Roaring Moon TEF 109
+// 4 Roaring Moon ex PAR 124
+// 1 Squawkabilly ex PAL 169
+// Trainer - 40
+// 4 Ancient Booster Energy Capsule TEF 140
+// 4 Arven SVI 166
+// 2 Boss’s Orders (Ghetsis) PAL 172
+// 4 Dark Patch ASR 139
+// 4 Earthen Vessel PAR 163
+// 4 Explorer's Guidance TEF 147
+// 4 Nest Ball SVI 181
+// 2 PokéStop PGO 68
+// 4 Professor Sada's Vitality PAR 170
+// 1 Scoop Up Cyclone TWM 162
+// 4 Trekking Shoes ASR 156
+// 3 Ultra Ball SVI 196
+// Energy - 10
+// 10 Basic Darkness Energy 15
+// `
 
 
 
-setupDeck(str).then(console.log)
+// setupDeck(str).then(console.log)
