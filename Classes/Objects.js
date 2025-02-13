@@ -18,13 +18,37 @@ export class Card {
 export class Area {
   /**
    * @param {Player | null} owner 
-   * @param {string} areaName 
+   * @param {import('.').AreaName} areaName 
+   * @param {{onInsertCard?: (card: Card) => Card} | undefined} config
    * @param {Card[]} cards 
    */
-  constructor(owner, areaName, cards) {
+  constructor(owner, areaName, cards, config) {
     this.owner = owner;
+    /** @type {import('.').AreaName} */
     this.name = areaName;
     this.cards = cards;
+    /** @type {((card: Card) => Card) | null}  */
+    this.onInsertCard = config?.onInsertCard || null;
+  }
+
+  /**
+   * @param {Card[]} cards 
+   * @returns {Area}
+   */
+  insertCardsToTop(cards) {
+    let cardsInput  = (this.onInsertCard) ? cards.map(this.onInsertCard) : cards;
+    this.cards = [...cardsInput, ...this.cards]
+    return this;
+  }
+
+  /**
+   * @param {Card[]} cards 
+   * @returns {Area}
+   */
+  insertCardsToBottom(cards) {
+    let cardsInput  = (this.onInsertCard) ? cards.map(this.onInsertCard) : cards;
+    this.cards = [...this.cards, ...cardsInput]
+    return this;
   }
 }
 
@@ -86,12 +110,14 @@ export class Game {
   }
 
   /**
-   * @param {object} root0
-   * @param {import('.').AreaName|undefined} root0.fromBottom
-   * @param {import('.').AreaName| undefined} root0.toBottom
-   * @param {number} root0.number
-   * @param {import('.').AreaName| undefined} root0.fromTop
-   * @param {import('.').AreaName| undefined} root0.toTop
+   * @param {{
+   * fromTop?: import('.').AreaName,
+   * fromBottom?: import('.').AreaName,
+   * toTop?: import('.').AreaName,
+   * toBottom?: import('.').AreaName,
+   * number: number
+   * }} args
+   * @returns {Game}
    */
   moveCards({
     fromBottom,
@@ -103,43 +129,27 @@ export class Game {
   }) {
     if(fromTop ) {
       let [cards, rest] = this.lookCardsFromTop(fromTop, number)
-
-      if((toTop || toBottom) === 'playerOneHand')
-        cards = cards.map(c => ({
-          ...c, visibleTo: 'PLAYER_ONE'
-        }))
-
-      if((toTop || toBottom) === 'playerTwoHand')
-        cards = cards.map(c => ({
-          ...c, visibleTo: 'PLAYER_TWO'
-        }))
-
-      if((toTop || toBottom) === 'playerOnePrize')
-        cards = cards.map(c => ({
-          ...c, visibleTo: 'PLAYER_ONE'
-        }))
-
-
-      if((toTop || toBottom) === 'playerTwoPrize')
-        cards = cards.map(c => ({
-          ...c, visibleTo: 'PLAYER_TWO'
-        }))
-
       if(toTop)
-        this.area[toTop].cards = [...this.area[toTop].cards,...cards]
+        this.area[toTop].insertCardsToTop(cards)
       else if(toBottom)
-        this.area[toBottom].cards = [...cards, ...this.area[toBottom].cards]
+        this.area[toBottom].insertCardsToBottom(cards)
 
       this.area[fromTop].cards = rest;
       return this;
     }
 
-    if(fromBottom) {
-      const [cards, rest] = this.lookCardsFromBottom(fromBottom, number)
-      this.area[toTop || toBottom].cards = [...this.area[toTop].cards,...cards]
+    else if(fromBottom) {
+      let [cards, rest] = this.lookCardsFromTop(fromBottom, number)
+      if(toTop)
+        this.area[toTop].insertCardsToTop(cards)
+      else if(toBottom)
+        this.area[toBottom].insertCardsToBottom(cards)
+
       this.area[fromBottom].cards = rest;
       return this;
     }
+
+    return this;
   }
 
   /**
@@ -172,6 +182,36 @@ export class Game {
     const rest = area.cards.slice(area.cards.length - number).reverse();
 
     return [rest, firstN];
+  }
+
+  /**
+   * @param {{
+   * id: string | number,
+   * from: import('.').AreaName,
+   * toBottom?:  import('.').AreaName,
+   * toTop?:  import('.').AreaName,
+   * }} args
+   * @returns {Game}
+   * @throws {Error}
+   */
+  moveSpecificCardByCardId(args) {
+    const area = this.area[args.from];
+    const cardIndex = area.cards.findIndex(c => c.card.id.toString() === args.id.toString() || c.id.toString() === args.id.toString())
+    console.log(args)
+    if(cardIndex === -1) {
+      throw new Error('Cannot find card.')
+    }
+
+    const card = area.cards[cardIndex];
+    this.area[args.from].cards[cardIndex] = null
+    this.area[args.from].cards = this.area[args.from].cards.filter(e => !!e)
+    if(args.toTop) {
+      this.area[args.toTop].insertCardsToTop([card])
+    }
+    else if(args.toBottom) {
+      this.area[args.toBottom].insertCardsToBottom([card])
+    }
+    return this
   }
 
   async saveFile() {
@@ -240,23 +280,54 @@ export class Game {
    */
   static async loadFile() {
     const dataBuffer = await readFile('state.json', 'utf-8');
+    /** @type {{area: Area[]}} */
     const data = JSON.parse(dataBuffer)
     const game = new Game(
       new Player(data.playerOne.id, data.playerOne.name, []), 
       new Player(data.playerOne.id, data.playerOne.name, []))
 
     data.area.forEach(area => {
-      game.area[area.name] = {
-        owner: area.data.o, name: area.name, cards: area.data.c.map(c => {
-          const cardInfo = data.cards[c.c]
-          /** @type {Card} */
-          const card = {
-            id: c.id, visibleTo: c.v, card: cardInfo
-          }
-          return card;
+      let fn = null;
+      if(area.name === 'playerOneArena') {
+        fn = (c) => ({
+          ...c, visibleTo: 'ALL'
         })
       }
+
+      if(area.name === 'playerOneDeck') {
+        fn = (c) => ({
+          ...c, visibleTo: 'NONE'
+        })
+      }
+
+      if(area.name === 'playerOneHand') {
+        fn = (c) => ({
+          ...c, visibleTo: 'PLAYER_ONE'
+        })
+      }
+
+      if(area.name === 'playerOnePrize') {
+        fn = (c) => ({
+          ...c, visibleTo: 'NONE'
+        })
+      }
+
+      if(area.name === 'playerOneTrash') {
+        fn = (c) => ({
+          ...c, visibleTo: 'ALL'
+        })
+      }
+
+      game.area[area.name] = new Area(game.player1.id === area.data.o ? game.player1 : game.player2, area.name, area.data.c.map(c => {
+        const cardInfo = data.cards[c.c]
+        /** @type {Card} */
+        const card = {
+          id: c.id, visibleTo: c.v, card: cardInfo
+        }
+        return card;
+      }), {onInsertCard: fn})
     })
+    console.log(game)
     return game;
   }
 }
