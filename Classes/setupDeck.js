@@ -2,12 +2,14 @@ import ApiClient from '../Api.js';
 
 /**
  * @param {string} deckString
+ * @param {{onCardFound: (text: string, card: import('../types.js').CardListResponse,
+ * index: number, arr: string[]) => void}} arg 
  * @returns {Promise<import('../types.js').CardType[]>}
  */
-export async function setupDeck(deckString) {
+export async function setupDeck(deckString, arg) {
   const lines = deckString.split('\n').filter(e => e.trim() !== '');
 
-  const data = await lines.reduce(async (prev, line) => {
+  const data = await lines.reduce(async (prev, line, index, arr) => {
     const acc = await prev
     const tokens = line.split(' ').map(e => e.trim()).filter(e => !!e);
     const firstToken = tokens[0]
@@ -19,18 +21,13 @@ export async function setupDeck(deckString) {
         section: firstToken
       };
     }
-
-    console.log({
-      section: acc.section, line, setPtcgoCode, firstToken
-    })
-
     const setData = await new ApiClient().getSetByPtcgo(setPtcgoCode);
-
     const cardData =  (acc.section === 'Energy' && setPtcgoCode === 'Energy') ? 
       await new ApiClient().getCardById(`sve-${setNumber}`) :
       await new ApiClient().getCardById(`${setData.data[0].id}-${setNumber}`) 
 
-    console.log(cardData.data.name)
+    if(arg?.onCardFound)
+      arg.onCardFound(line, cardData, index, arr)
 
     return {
       data: [...acc.data, {
