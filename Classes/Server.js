@@ -3,6 +3,7 @@ import { Player } from './Player.js';
 import handleChats from '../handles/chats.handle.js';
 import PlayerMessage from './PlayerMessage.js';
 import players from './Players.js';
+import handleDecks from '../handles/decks.handle.js';
 
 export default class Server {
   constructor() {
@@ -19,7 +20,7 @@ export default class Server {
       console.log('Connected')
       ws.sendCmd = (cmd, data) => {
         return ws.send(JSON.stringify({
-          cmd, ...data
+          c: cmd, d: data
         }))
       }
       ws.on('message', (message) => {
@@ -49,10 +50,10 @@ export default class Server {
       )
 
       handleChats(messageFromPlayer)
-
+      handleDecks(messageFromPlayer)
     }
     catch(err) {
-      console.log(err.message)
+      console.error(err)
       return this.handleIncomingMessage(server, ws, '{}')
       // error in parsing
     }

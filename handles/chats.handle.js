@@ -31,7 +31,6 @@ async function sendChat(roomId, fromId, message) {
 }
 
 /**
- * @param {import("../@types").Player} Player
  * @param {PlayerMessage} message
  */
 export default async function handleChats(message) {

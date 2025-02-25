@@ -13,15 +13,17 @@ export default class PlayerMessage {
      */
     this.player = player
 
+    const {cmd, ...data} = message
+
     /**
      * @type {string}
      */
-    this.cmd = message.cmd
+    this.cmd = cmd
 
     /**
      * @type {object | undefined | null}
      */
-    this.data = message.data
+    this.data = data
 
     /**
      * @type {Room|null}

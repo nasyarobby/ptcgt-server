@@ -16,7 +16,7 @@ export class Player {
     this.redis = redis
     /** @type {string} */
     this.id = pid;
-    /** @type {WebSocket} */
+    /** @type {WebSocket & {sendCmd: (cmd:string, data:object) => void}} */
     this.ws = ws;
   }
 
