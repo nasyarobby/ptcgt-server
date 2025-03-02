@@ -3,6 +3,14 @@ import redis from '../Classes/Redis.js';
 import { setupDeck } from '../Classes/setupDeck.js';
 
 /**
+ * @param pid
+ * @returns {Promise<string[]>}
+ */
+function getDecks(pid) {
+  return redis.hgetall(`ptcgt:decks:${pid}`);
+}
+
+/**
  * @param {string} pid
  * @param {string} deckName
  * @param {string} deckstring
@@ -44,6 +52,7 @@ function saveDeck(pid, deckName, deckstring, deckData) {
  */
 export default async function handleDecks(message) {
   if (message.cmd === 'save_deck') {
+    console.log(message)
     message.player.ws.sendCmd('s_pending_save_deck', {} );
     const deck = await setupDeck(message.data.deck, {
       onCardFound: (line, card, index, arr) => {
@@ -62,5 +71,23 @@ export default async function handleDecks(message) {
     message.player.ws.sendCmd('s_ok_save_deck',
       { deck: deck },
     )
+  }
+
+  if (message.cmd === 'get_decks') {
+    const decks = await getDecks(message.player.id);
+    console.log({decks})
+    message.player.ws.send(
+      JSON.stringify({
+        c: 's_ok_get_decks',
+        d: {
+          decks: Object.keys(decks).map((name) => {
+            return {
+              name,
+              data: JSON.parse(decks[name]),
+            };
+          }),
+        },
+      })
+    );
   }
 }
