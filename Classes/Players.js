@@ -16,7 +16,8 @@ class PlayerPool {
   registerPlayer(playerId, ws) {
     const _playerId = playerId || new ShortUniqueId({ length: 32 }).rnd();
     this.players[_playerId] = new Player(this.redis, _playerId, ws)
-    ws.sendCmd('s_ok_auth', {pid: _playerId})
+    if(!playerId)
+      ws.sendCmd('s_ok_auth', {pid: _playerId})
     return this.players[_playerId]
   }
 }
