@@ -22,8 +22,17 @@ export async function setupDeck(deckString, arg) {
       };
     }
     const setData = await new ApiClient().getSetByPtcgo(setPtcgoCode);
+    console.log(setPtcgoCode)
     const cardData =  (acc.section === 'Energy' && setPtcgoCode === 'Energy') ? 
-      await new ApiClient().getCardById(`sve-${setNumber}`) :
+      await (async () => {
+        try {
+          return await new ApiClient().getCardById(`sve-${setNumber}`)
+        }
+        catch(err) {
+          return new ApiClient().getCardById(`swsh12pt5-${setNumber}`)
+        }
+      })()
+      :
       await new ApiClient().getCardById(`${setData.data[0].id}-${setNumber}`) 
 
     if(arg?.onCardFound)

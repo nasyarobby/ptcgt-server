@@ -11,6 +11,15 @@ function getDecks(pid) {
 }
 
 /**
+ * @param pid
+ * @param deckName
+ * @returns {Promise<string[]>}
+ */
+function getDeckByName(pid, deckName) {
+  return redis.hget(`ptcgt:decks:${pid}`, deckName);
+}
+
+/**
  * @param {string} pid
  * @param {string} deckName
  * @param {string} deckstring
@@ -86,6 +95,23 @@ export default async function handleDecks(message) {
               data: JSON.parse(decks[name]),
             };
           }),
+        },
+      })
+    );
+  }
+
+  
+  if (message.cmd === 'get_deck_by_name') {
+    const deckName = message.data.deckName
+    const deck = await getDeckByName(message.player.id, deckName);
+    message.player.ws.send(
+      JSON.stringify({
+        c: 's_ok_get_deck_by_name',
+        d: {
+          deck:  {
+            name: deckName,
+            data: JSON.parse(deck),
+          }
         },
       })
     );

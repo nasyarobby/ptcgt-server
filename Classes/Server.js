@@ -4,6 +4,7 @@ import handleChats from '../handles/chats.handle.js';
 import PlayerMessage from './PlayerMessage.js';
 import players from './Players.js';
 import handleDecks from '../handles/decks.handle.js';
+import handleCreateGame from '../handles/createGame.handle.js';
 
 export default class Server {
   constructor() {
@@ -51,6 +52,7 @@ export default class Server {
 
       handleChats(messageFromPlayer)
       handleDecks(messageFromPlayer)
+      handleCreateGame(messageFromPlayer)
     }
     catch(err) {
       console.error(err)
