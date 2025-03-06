@@ -1,3 +1,4 @@
+import { Player } from '../Classes/Player.js';
 import PlayerMessage from '../Classes/PlayerMessage.js';
 import Randomizer from '../Classes/Randomizer.js';
 import redis from '../Classes/Redis.js';
@@ -89,7 +90,10 @@ export default async function handleJoinGame(message) {
      * Setup a game
      */
     
-    // copy deck
+    
+    /**
+     * @type {Player[]}
+     */
     const players = [playerOne, message.player];
     
     const gameData = {
@@ -100,9 +104,6 @@ export default async function handleJoinGame(message) {
           const playerNum = index + 1;
     
           const deck = await redis.hget(roomHashKey, `p${playerNum}_deck`);
-    
-          console.log({ deck });
-    
           return {
             id: player.id,
             name: player.name,
@@ -126,6 +127,13 @@ export default async function handleJoinGame(message) {
       `state_${roomInfo.step}`,
       JSON.stringify(gameData)
     );
+
+    const latestRoomInfo = await getRoomInfo(roomIdFromHash);
+
+
+    players.forEach(player => {
+      player.ws.sendCmd('s_game_setup', {players: latestRoomInfo.players})
+    })
   }
     
 }
